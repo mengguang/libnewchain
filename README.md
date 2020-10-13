@@ -1,0 +1,1 @@
+# NewChain library for C and CPP languages
