@@ -12,14 +12,14 @@ const int v = 0x0802 - (1007 * 2) - 35;
 int main(int argc, char **argv) {
     uint8_t binary_message_hash[32];
     uint8_t binary_signature[64];
-    hex_to_bin(message_hash,binary_message_hash);
-    hex_to_bin(signature,binary_signature);
+    hex_load(message_hash,binary_message_hash,sizeof(binary_message_hash));
+    hex_load(signature,binary_signature,sizeof(binary_signature));
 
     uint8_t binary_public_key[65];
     memset(binary_public_key,0,sizeof(binary_public_key));
     bool result = newchain_recover_public_key(binary_message_hash,binary_signature,v,binary_public_key);
     if(result) {
-        simple_hex_dump(LOG_INFO,"public key:",binary_public_key,sizeof(binary_public_key));
+        hex_dump("public key:",binary_public_key,sizeof(binary_public_key));
     } else {
         printf("newchain_recover_public_key error.\n");
     }

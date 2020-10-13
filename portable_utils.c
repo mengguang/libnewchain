@@ -12,11 +12,11 @@
 bool check_and_create_wallet_dir(const char *dir) {
     struct stat info;
     if (stat(dir, &info) != 0) {
-        log_debug("can not access %s\n", dir);
+        printf("can not access %s\n", dir);
 #ifdef _WIN32
 #include <direct.h>
         if (mkdir(dir) == 0) {
-            log_debug("can not create dir: %s\n", dir);
+            printf("can not create dir: %s\n", dir);
             return true;
         } else {
             return false;
@@ -32,7 +32,7 @@ bool check_and_create_wallet_dir(const char *dir) {
     } else if (info.st_mode & S_IFDIR) {
         return true;
     } else {
-        log_error("%s exists and is not a dir.\n", dir);
+        printf("%s exists and is not a dir.\n", dir);
         return false;
     }
 }

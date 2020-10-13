@@ -126,22 +126,22 @@ bool get_address_from_keystore_text(const char *keystore_text, char *address) {
     int r = jsmn_parse(&p, keystore_text, strlen(keystore_text), t,
                        MAX_TOKEN_SIZE);
     if (r < 0) {
-        log_error("jsmn_parse failed: %d\n", r);
+        printf("jsmn_parse failed: %d\n", r);
         return false;
     }
     if (r < 1 || t[0].type != JSMN_OBJECT) {
-        log_error("JSON Object expected.\n");
+        printf("JSON Object expected.\n");
         return false;
     }
 
-    log_debug("jsmn_parse got %d tokens.\n", r);
+    printf("jsmn_parse got %d tokens.\n", r);
 
     bool result;
     int length = NEWCHAIN_HEX_ADDRESS_LENGTH;
     result = get_value_from_tokens(keystore_text, t, r, "address", (uint8_t *) address, &length,
                                    false);
     if (result == false) {
-        log_error("get_value_from_tokens of address failed.\n");
+        printf("get_value_from_tokens of address failed.\n");
         return false;
     }
     return true;
@@ -156,15 +156,15 @@ bool get_secret_key_from_keystore_text(const char *keystore_text,
     int r = jsmn_parse(&p, keystore_text, strlen(keystore_text), t,
                        MAX_TOKEN_SIZE);
     if (r < 0) {
-        log_error("jsmn_parse failed: %d\n", r);
+        printf("jsmn_parse failed: %d\n", r);
         return false;
     }
     if (r < 1 || t[0].type != JSMN_OBJECT) {
-        log_error("JSON Object expected.\n");
+        printf("JSON Object expected.\n");
         return false;
     }
 
-    log_debug("jsmn_parse got %d tokens.\n", r);
+    printf("jsmn_parse got %d tokens.\n", r);
 
     uint8_t iv[16];
     bool result;
@@ -172,40 +172,40 @@ bool get_secret_key_from_keystore_text(const char *keystore_text,
     result = get_value_from_tokens(keystore_text, t, r, "iv", iv, &length,
                                    true);
     if (result == false) {
-        log_error("get_value_from_tokens of iv failed.\n");
+        printf("get_value_from_tokens of iv failed.\n");
         return false;
     }
-    hex_dump_debug("iv: ", iv, length);
+    hex_dump("iv: ", iv, length);
 
     uint8_t cipher_bin[32];
     length = sizeof(cipher_bin);
     result = get_value_from_tokens(keystore_text, t, r, "ciphertext",
                                    cipher_bin, &length, true);
     if (result == false) {
-        log_error("get_value_from_tokens of ciphertext failed.\n");
+        printf("get_value_from_tokens of ciphertext failed.\n");
         return false;
     }
-    hex_dump_debug("cipher_bin: ", cipher_bin, length);
+    hex_dump("cipher_bin: ", cipher_bin, length);
 
     uint8_t salt[32];
     length = sizeof(salt);
     result = get_value_from_tokens(keystore_text, t, r, "salt", salt, &length,
                                    true);
     if (result == false) {
-        log_error("get_value_from_tokens of salt failed.\n");
+        printf("get_value_from_tokens of salt failed.\n");
         return false;
     }
-    hex_dump_debug("salt: ", salt, length);
+    hex_dump("salt: ", salt, length);
 
     uint8_t mac[32];
     length = sizeof(mac);
     result = get_value_from_tokens(keystore_text, t, r, "mac", mac, &length,
                                    true);
     if (result == false) {
-        log_error("get_value_from_tokens of mac failed.\n");
+        printf("get_value_from_tokens of mac failed.\n");
         return false;
     }
-    hex_dump_debug("mac: ", mac, length);
+    hex_dump("mac: ", mac, length);
 
     uint8_t derived_key[32];
     uint32_t iterations = 0;
@@ -216,21 +216,21 @@ bool get_secret_key_from_keystore_text(const char *keystore_text,
                                    (uint8_t *) iterations_text, &length,
                                    false);
     if (result == false) {
-        log_error("get_value_from_tokens of c failed.\n");
+        printf("get_value_from_tokens of c failed.\n");
         return false;
     }
-    log_debug("iterations: %s\n", iterations_text);
+    printf("iterations: %s\n", iterations_text);
 
     iterations = (uint32_t) strtol(iterations_text, NULL, 10);
 
     if ((iterations < 4096) || (iterations > 262144)) {
-        log_error("invalid iterations of c: %u\n", iterations);
+        printf("invalid iterations of c: %u\n", iterations);
         return false;
     }
 
     pbkdf2_hmac_sha256((uint8_t *) password, (int) strlen(password), salt,
                        sizeof(salt), iterations, derived_key, sizeof(derived_key));
-    hex_dump_debug("derived_key: ", derived_key, sizeof(derived_key));
+    hex_dump("derived_key: ", derived_key, sizeof(derived_key));
 
     SHA3_CTX ctx;
     keccak_256_Init(&ctx);
@@ -239,24 +239,24 @@ bool get_secret_key_from_keystore_text(const char *keystore_text,
     uint8_t c_mac[32];
     keccak_Final(&ctx, c_mac);
     if (memcmp(mac, c_mac, sizeof(mac)) != 0) {
-        log_error("password is not correct.\n");
+        printf("password is not correct.\n");
         return false;
     }
-    log_debug("password is correct.\n");
+    printf("password is correct.\n");
 
     struct AES_ctx aes;
     AES_init_ctx_iv(&aes, derived_key, iv);
     AES_CTR_xcrypt_buffer(&aes, cipher_bin, sizeof(cipher_bin));
     memcpy(secret_key, cipher_bin, sizeof(cipher_bin));
-    hex_dump_debug("plain cipher: ", cipher_bin, sizeof(cipher_bin));
+    hex_dump("plain cipher: ", cipher_bin, sizeof(cipher_bin));
 
     uint8_t address[20];
     result = newchain_private_key_to_address(secret_key, address);
     if (result == false) {
-        log_error("newchain_private_key_to_address failed.\n");
+        printf("newchain_private_key_to_address failed.\n");
         return false;
     }
-    hex_dump_debug("address: ", address, sizeof(address));
+    hex_dump("address: ", address, sizeof(address));
 
     return true;
 }
@@ -316,7 +316,7 @@ bool generate_keystore_text_from_secret_key(const uint8_t *secret_key,
     uint8_t address[20];
     result = newchain_private_key_to_address(secret_key, address);
     if (result != true) {
-        log_error("newchain_private_key_to_address failed.\n");
+        printf("newchain_private_key_to_address failed.\n");
         return false;
     }
 
@@ -324,14 +324,14 @@ bool generate_keystore_text_from_secret_key(const uint8_t *secret_key,
     uint32_t iterations = PBKDF2_ITERATIONS;
     pbkdf2_hmac_sha256((uint8_t *) password, strlen(password), salt,
                        sizeof(salt), iterations, derived_key, sizeof(derived_key));
-    hex_dump_debug("derived_key: ", derived_key, sizeof(derived_key));
+    hex_dump("derived_key: ", derived_key, sizeof(derived_key));
 
     struct AES_ctx aes;
     uint8_t cipher_bin[32];
     memcpy(cipher_bin, secret_key, sizeof(cipher_bin));
     AES_init_ctx_iv(&aes, derived_key, iv);
     AES_CTR_xcrypt_buffer(&aes, cipher_bin, sizeof(cipher_bin));
-    hex_dump_debug("cipher_bin: ", cipher_bin, sizeof(cipher_bin));
+    hex_dump("cipher_bin: ", cipher_bin, sizeof(cipher_bin));
 
     uint8_t mac[32];
     SHA3_CTX ctx;
@@ -339,7 +339,7 @@ bool generate_keystore_text_from_secret_key(const uint8_t *secret_key,
     keccak_Update(&ctx, derived_key + 16, 16);
     keccak_Update(&ctx, cipher_bin, sizeof(cipher_bin));
     keccak_Final(&ctx, mac);
-    hex_dump_debug("mac: ", mac, sizeof(mac));
+    hex_dump("mac: ", mac, sizeof(mac));
 
     uint8_t uuid[16];
     result = generate_random_uuid(uuid);

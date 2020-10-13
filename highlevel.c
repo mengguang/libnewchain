@@ -61,32 +61,32 @@ bool generate_new_keystore_and_save(const char *wallet_dir, const char *password
     uint8_t secret_key[NEWCHAIN_PRIVATE_KEY_LENGTH];
     result = generate_new_key(secret_key);
     if (!result) {
-        log_error("generate_new_key failed.\n");
+        printf("generate_new_key failed.\n");
         return false;
     }
     char keystore_text[1024] = {0};
     result = generate_keystore_text_from_secret_key(secret_key, password, keystore_text);
     memzero(secret_key, sizeof(secret_key));
     if (!result) {
-        log_error("generate_keystore_text_from_secret_key failed.\n");
+        printf("generate_keystore_text_from_secret_key failed.\n");
         return false;
     }
     char _hex_address[NEWCHAIN_HEX_ADDRESS_LENGTH + 1] = {0};
     result = get_address_from_keystore_text(keystore_text, _hex_address);
     if (!result) {
-        log_error("get_address_from_keystore_text failed.\n");
+        printf("get_address_from_keystore_text failed.\n");
         return false;
     }
     printf("Address: %s\n", _hex_address);
     if (!check_and_create_wallet_dir(wallet_dir)) {
-        log_error("can not access dir: %s\n", wallet_dir);
+        printf("can not access dir: %s\n", wallet_dir);
         return false;
     }
     char keystore_file_path[128] = {0};
     snprintf(keystore_file_path, sizeof(keystore_file_path), "%s/%s", wallet_dir, _hex_address);
     result = write_keystore_file(keystore_file_path, keystore_text, strlen(keystore_text));
     if (!result) {
-        log_error("write_keystore_file failed.\n");
+        printf("write_keystore_file failed.\n");
         return false;
     }
     if (hex_address != NULL) {
@@ -103,12 +103,12 @@ bool load_keystore_and_get_secret_key(const char *hex_address, const char *passw
     size_t keystore_text_length = sizeof(keystore_text);
     result = read_keystore_file(keystore_file_path, keystore_text, &keystore_text_length);
     if (!result) {
-        log_error("read_keystore_file failed.\n");
+        printf("read_keystore_file failed.\n");
         return false;
     }
     result = get_secret_key_from_keystore_text(keystore_text, password, secret_key);
     if (!result) {
-        log_error("get_secret_key_from_keystore_text failed.\n");
+        printf("get_secret_key_from_keystore_text failed.\n");
         return false;
     }
     return true;
@@ -119,25 +119,25 @@ bool validate_keystore_text(const char *keystore_text, const char *password) {
     uint8_t secret_key[NEWCHAIN_PRIVATE_KEY_LENGTH] = {0};
     result = get_secret_key_from_keystore_text(keystore_text, password, secret_key);
     if (!result) {
-        log_error("get_secret_key_from_keystore_text failed.\n");
+        printf("get_secret_key_from_keystore_text failed.\n");
         return false;
     }
     char hex_address[NEWCHAIN_HEX_ADDRESS_LENGTH + 1] = {0};
     result = get_address_from_keystore_text(keystore_text, hex_address);
     if (!result) {
-        log_error("get_secret_key_from_keystore_text failed.\n");
+        printf("get_secret_key_from_keystore_text failed.\n");
         return false;
     }
     uint8_t bin_address[NEWCHAIN_ADDRESS_LENGTH] = {0};
-    hex_to_bin(hex_address, bin_address);
+    printf(hex_address, bin_address);
     uint8_t binary_address_from_key[NEWCHAIN_ADDRESS_LENGTH] = {0};
     result = newchain_private_key_to_address(secret_key, binary_address_from_key);
     if (!result) {
-        log_error("newchain_private_key_to_address failed.\n");
+        printf("newchain_private_key_to_address failed.\n");
         return false;
     }
     if (memcmp(bin_address, binary_address_from_key, sizeof(bin_address)) != 0) {
-        log_error("Address not match, keystore validate failed.\n");
+        printf("Address not match, keystore validate failed.\n");
         return false;
     } else {
         return true;
@@ -159,12 +159,12 @@ bool build_and_sign_transaction(const char *from_hex_address, const char *passwo
     uint8_t value[32] = {0};
     uint8_t to_binary_address[NEWCHAIN_ADDRESS_LENGTH];
     //TODO: validate address length and format.
-    hex_to_bin(to_hex_address, to_binary_address);
+    hex_load(to_hex_address, to_binary_address,sizeof(to_binary_address));
 
     uint8_t binary_private_key[NEWCHAIN_PRIVATE_KEY_LENGTH] = {0};
     result = load_keystore_and_get_secret_key(from_hex_address, password, binary_private_key);
     if (!result) {
-        log_error("load_keystore_and_get_secret_key failed!\n");
+        printf("load_keystore_and_get_secret_key failed!\n");
         return false;
     }
 
@@ -184,7 +184,7 @@ bool build_and_sign_transaction(const char *from_hex_address, const char *passwo
     uint32_t length = sizeof(unsigned_transaction);
     result = newchain_build_unsigned_transaction(&tx, unsigned_transaction, &length);
     if (!result) {
-        log_error("newchain_build_unsigned_transaction failed!\n");
+        printf("newchain_build_unsigned_transaction failed!\n");
         return false;
     }
     hex_dump("unsigned transaction", unsigned_transaction, length);
@@ -192,21 +192,21 @@ bool build_and_sign_transaction(const char *from_hex_address, const char *passwo
     uint8_t hash[NEWCHAIN_KECCAK256_LENGTH];
     result = newchain_hash_transaction(&tx, hash);
     if (!result) {
-        log_error("newchain_hash_transaction failed!\n");
+        printf("newchain_hash_transaction failed!\n");
         return false;
     }
     uint8_t signature[NEWCHAIN_SIGNATURE_LENGTH];
     uint8_t recovery_id = 0;
     result = newchain_sign_transaction(binary_private_key, hash, signature, &recovery_id);
     if (!result) {
-        log_error("newchain_sign_transaction failed!\n");
+        printf("newchain_sign_transaction failed!\n");
         return false;
     }
     uint8_t signed_transaction[1024];
     length = sizeof(signed_transaction);
     result = newchain_build_signed_transaction(&tx, recovery_id, signature, signed_transaction, &length);
     if (!result) {
-        log_error("newchain_build_signed_transaction failed!\n");
+        printf("newchain_build_signed_transaction failed!\n");
         return false;
     }
     hex_dump("signed transaction", signed_transaction, length);
