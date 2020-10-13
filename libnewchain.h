@@ -5,7 +5,8 @@
 #ifndef LIBNEWCHAIN_H
 #define LIBNEWCHAIN_H
 
-
+#include "stdio.h"
+#include "string.h"
 #include "bignum.h"
 #include "memzero.h"
 #include "portable_utils.h"

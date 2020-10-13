@@ -17,6 +17,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
 add_executable(${PROJECT_NAME}
         main.c
+        highlevel.c
         jsmn/jsmn.c
         keystore.c
         misc.c
@@ -25,5 +26,5 @@ add_executable(${PROJECT_NAME}
         tiny-aes-c/tinyaes.c
         micro-ecc/uECC.c
         ${DIR_SRCS}
-        portable_utils.c portable_utils.h)
+        portable_utils.c portable_utils.h highlevel.h highlevel.c)
 
