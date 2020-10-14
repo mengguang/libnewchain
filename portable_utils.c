@@ -23,7 +23,7 @@ bool check_and_create_wallet_dir(const char *dir) {
         }
 #else
         if (mkdir(dir, 0700) != 0) {
-            log_debug("can not create dir: %s\n", dir);
+            printf("can not create dir: %s\n", dir);
             return false;
         } else {
             return true;

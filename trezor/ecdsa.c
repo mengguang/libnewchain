@@ -425,13 +425,15 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k,
   assert(bn_is_less(k, &curve->order));
 
   int i, j;
-  static CONFIDENTIAL bignum256 a;
+  bignum256 a;
+  //static CONFIDENTIAL bignum256 a;
   uint32_t *aptr;
   uint32_t abits;
   int ashift;
   uint32_t is_even = (k->val[0] & 1) - 1;
   uint32_t bits, sign, nsign;
-  static CONFIDENTIAL jacobian_curve_point jres;
+  //static CONFIDENTIAL jacobian_curve_point jres;
+  jacobian_curve_point jres;
   curve_point pmult[8];
   const bignum256 *prime = &curve->prime;
 
@@ -546,10 +548,12 @@ void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
   assert(bn_is_less(k, &curve->order));
 
   int i, j;
-  static CONFIDENTIAL bignum256 a;
+  bignum256 a;
+  //static CONFIDENTIAL bignum256 a;
   uint32_t is_even = (k->val[0] & 1) - 1;
   uint32_t lowbits;
-  static CONFIDENTIAL jacobian_curve_point jres;
+  jacobian_curve_point jres;
+  //static CONFIDENTIAL jacobian_curve_point jres;
   const bignum256 *prime = &curve->prime;
 
   // is_even = 0xffffffff if k is even, 0 otherwise.
